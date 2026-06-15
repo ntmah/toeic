@@ -1,0 +1,36 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: toeic-backend
+    restart: unless-stopped
+    env_file:
+      - ./backend/.env        # chứa MONGODB_URL trỏ tới Atlas
+    ports:
+      - "8000:8000"
+    networks:
+      - toeic-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: toeic-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - toeic-net
+
+networks:
+  toeic-net:
+    driver: bridge
